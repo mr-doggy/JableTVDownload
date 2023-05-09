@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 if len(args.url) != 0:
     url = args.url
-    download(url)
+    download(url, args.output, args.encode_enabled, args.gpu)
 elif args.random == True:
     url = av_recommand()
     download(url)

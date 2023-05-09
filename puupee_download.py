@@ -9,23 +9,21 @@ from crawler import prepareCrawl
 from merge import mergeMp4
 from delete import deleteM3u8, deleteMp4
 from cover import getCover
-from encode import ffmpegEncode
+from puupee_encode import ffmpegEncode
 from args import *
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-def download(url, encode_enabled=False):
-    print("正在下載影片: " + url)
+def download(url, output_filename, encode_enabled=False, gpu=False):
+    print("正在下载: " + url)
     # 建立番號資料夾
-    urlSplit = url.split("/")
-    dirName = urlSplit[-2]
-    if os.path.exists(f"{dirName}/{dirName}.mp4"):
-        print("番號資料夾已存在, 跳過...")
+    folderPath = os.path.dirname(output_filename)
+    if os.path.exists(output_filename):
+        print("文件已存在, 跳过...")
         return
-    if not os.path.exists(dirName):
-        os.makedirs(dirName)
-    folderPath = os.path.join(os.getcwd(), dirName)
+    if not os.path.exists(folderPath):
+        os.makedirs(folderPath)
 
     # 配置Selenium參數
     options = Options()
@@ -49,7 +47,7 @@ def download(url, encode_enabled=False):
     downloadurl = "/".join(m3u8urlList)
 
     # 儲存 m3u8 file 至資料夾
-    m3u8file = os.path.join(folderPath, dirName + ".m3u8")
+    m3u8file = os.path.join(folderPath, os.path.basename(output_filename) + ".m3u8")
     urllib.request.urlretrieve(m3u8url, m3u8file)
 
     # 得到 m3u8 file裡的 URI和 IV
@@ -97,4 +95,14 @@ def download(url, encode_enabled=False):
     getCover(html_file=dr.page_source, folder_path=folderPath)
 
     # 轉檔
-    ffmpegEncode(folderPath, dirName, encode_enabled)
+    action = 0
+    if encode_enabled:
+        if gpu:
+            action = 1
+        else:
+            action = 2
+    ffmpegEncode(
+        folderPath,
+        os.path.basename(output_filename),
+        action,
+    )
